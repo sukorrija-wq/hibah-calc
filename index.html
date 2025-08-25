@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Kalkulator Hibah – Ringkas</title>
+  <style>
+    body{margin:0;font-family:system-ui,Arial;background:#0f172a;color:#e5e7eb;}
+    .container{max-width:480px;margin:0 auto;padding:20px;}
+    h1{text-align:center;font-size:20px;margin-bottom:20px}
+    .row{margin-bottom:14px;display:grid;gap:6px}
+    label{font-size:14px;color:#94a3b8}
+    input{padding:10px;border-radius:8px;border:1px solid #233046;background:#0b1220;color:#e5e7eb;font-size:14px}
+    input:focus{border-color:#38bdf8;outline:none}
+    button{width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(135deg,#22c55e,#06b6d4);color:#002230;font-weight:700;cursor:pointer;margin-top:6px}
+    .result{margin-top:20px;padding:14px;background:#111827;border-radius:12px}
+    .pill{display:flex;justify-content:space-between;margin:6px 0;padding:8px 10px;background:#1f2937;border-radius:8px}
+    .footer{text-align:center;margin-top:20px;font-size:12px;color:#9ca3af}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Kalkulator Hibah</h1>
+
+    <div class="row">
+      <label for="name">Nama Anda</label>
+      <input type="text" id="name" placeholder="cth: Encik Ahmad" />
+    </div>
+
+    <div class="row">
+      <label for="salary">Gaji Sebulan (RM)</label>
+      <input type="number" id="salary" placeholder="cth: 1700" />
+    </div>
+
+    <div class="row">
+      <label for="years">Tempoh Survival (tahun)</label>
+      <input type="number" id="years" placeholder="cth: 5" />
+    </div>
+
+    <button id="calcBtn">Kira Hibah</button>
+
+    <div class="result" id="result" hidden>
+      <div id="captureArea">
+        <div class="pill"><span>Nama Anda:</span><span id="outName">-</span></div>
+        <div class="pill"><span>Gaji Tahunan</span><span id="outAnnual">-</span></div>
+        <div class="pill"><span>Tempoh Survival</span><span id="outYears">-</span></div>
+        <div class="pill" style="background:#065f46"><span>Jumlah Hibah Disasar</span><span id="outTotal">-</span></div>
+        <div style="text-align:center;margin-top:10px;font-size:12px;color:#9ca3af">
+          Dibangunkan oleh <b>Lisa ChatGPT</b>.<br/>Funded by <b>Sukor Rija Legacy</b>.
+        </div>
+      </div>
+      <button id="shareBtn">Kongsi Hasil (Teks)</button>
+      <button id="imgBtn">Kongsi Hasil (Gambar)</button>
+    </div>
+
+    <div class="footer">© <span id="year"></span> Dibangunkan oleh Lisa ChatGPT · Funded by Sukor Rija Legacy</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const fmt = n => new Intl.NumberFormat('ms-MY',{style:'currency',currency:'MYR',maximumFractionDigits:0}).format(n||0).replace('MYR','RM');
+    const calcBtn = document.getElementById('calcBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const imgBtn = document.getElementById('imgBtn');
+
+    let shareText = '';
+
+    calcBtn.addEventListener('click',()=>{
+      const name = document.getElementById('name').value||'-';
+      const salary = +document.getElementById('salary').value||0;
+      const years = +document.getElementById('years').value||0;
+
+      const annual = salary*12;
+      const total = annual*years;
+
+      document.getElementById('outName').textContent = name ? name : '(Sila masukkan nama anda)';
+      document.getElementById('outAnnual').textContent=fmt(annual);
+      document.getElementById('outYears').textContent=years+" tahun";
+      document.getElementById('outTotal').textContent=fmt(total);
+      document.getElementById('result').hidden=false;
+
+      shareText = `Kiraan Hibah Disasar (${name})\n• Gaji Tahunan: ${fmt(annual)}\n• Tempoh Survival: ${years} tahun\n= Jumlah Hibah Disasar: ${fmt(total)}\n\nDibangunkan oleh Lisa ChatGPT.\nFunded by Sukor Rija Legacy.`;
+    });
+
+    shareBtn.addEventListener('click',async()=>{
+      if(navigator.share){
+        try{await navigator.share({title:'Kiraan Hibah',text:shareText});return;}catch(e){}
+      }
+      try{
+        await navigator.clipboard.writeText(shareText);
+        shareBtn.textContent='Disalin!';
+        setTimeout(()=>shareBtn.textContent='Kongsi Hasil (Teks)',1200);
+      }catch{
+        alert('Salin manual:\n\n'+shareText);
+      }
+    });
+
+    imgBtn.addEventListener('click',()=>{
+      const capture = document.getElementById('captureArea');
+      html2canvas(capture).then(canvas=>{
+        canvas.toBlob(async blob=>{
+          const file = new File([blob], 'hibah.png', {type:'image/png'});
+          if(navigator.share){
+            try{await navigator.share({files:[file],title:'Kiraan Hibah'});return;}catch(e){}
+          }
+          const link=document.createElement('a');
+          link.href=URL.createObjectURL(blob);
+          link.download='hibah.png';
+          link.click();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
